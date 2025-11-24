@@ -28,6 +28,21 @@ defmodule Expert.Engine.CodeIntelligence.DefinitionTest do
     %{uri: uri}
   end
 
+  defp with_heex_component(%{project: project}) do
+    uri =
+      project
+      |> file_path(Path.join("lib", "my_button.ex"))
+      |> Document.Path.ensure_uri()
+
+    {:ok, _document} = Document.Store.open_temporary(uri)
+
+    on_exit(fn ->
+      :ok = Document.Store.close(uri)
+    end)
+
+    %{uri: uri}
+  end
+
   defp subject_module_uri(project) do
     project
     |> file_path(Path.join("lib", "my_module.ex"))
@@ -67,6 +82,30 @@ defmodule Expert.Engine.CodeIntelligence.DefinitionTest do
     end)
 
     %{subject_uri: uri}
+  end
+
+  describe "definition/2 when making remote heex calls by alias" do
+    setup [:with_heex_component]
+
+    test "find the definition of a remote component", %{project: project, uri: referenced_uri} do
+      subject_module = ~q[
+        defmodule MyComponent do
+          alias MyButton
+
+          def fancy_button() do
+            ~H"""
+            <MyButton.but|ton>Fancy Button</MyButton.button>
+
+            """
+
+          end
+        end
+      ]
+      assert {:ok, ^referenced_uri, definition_line} =
+               definition(project, subject_module, referenced_uri)
+
+      assert definition_line == ~S[  def «button(assigns)» do]
+    end
   end
 
   describe "definition/2 when making remote call by alias" do

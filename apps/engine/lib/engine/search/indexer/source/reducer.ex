@@ -22,7 +22,8 @@ defmodule Engine.Search.Indexer.Source.Reducer do
     Extractors.FunctionReference,
     Extractors.StructDefinition,
     Extractors.StructReference,
-    Extractors.EctoSchema
+    Extractors.EctoSchema,
+    Extractors.HeexDefinition
   ]
 
   def new(%Analysis{} = analysis, extractors \\ nil) do
