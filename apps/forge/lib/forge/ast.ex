@@ -523,10 +523,23 @@ defmodule Forge.Ast do
     {:error, :surround_context}
   end
 
+
+  @heex_regex ~r/^(\s*)<\.(\w+)/
   defp do_surround_context_again(fragment, {line, column} = position) do
     case Code.Fragment.surround_context(fragment, {line, column - 1}) do
       :none ->
-        {:error, :surround_context}
+        l = String.split(fragment, "\n") |> Enum.at(line - 1)
+        case Regex.run(@heex_regex, l) do
+          [_, whitespace, function] ->
+            column_start = String.length(whitespace <> "<.")
+            column_end = column_start + String.length(function)
+
+            {:ok, %{context: {:heex_local_call, String.to_charlist(function)}, begin: {line, column_start}, end: {line, column_end}}}
+
+
+        _ ->
+          {:error, :surround_context}
+        end
 
       context ->
         if context.end == position do

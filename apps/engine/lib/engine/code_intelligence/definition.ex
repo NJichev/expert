@@ -17,7 +17,7 @@ defmodule Engine.CodeIntelligence.Definition do
   @spec definition(Document.t(), Position.t()) :: {:ok, [Location.t()]} | {:error, String.t()}
   def definition(%Document{} = document, %Position{} = position) do
     with {:ok, _, analysis} <- Document.Store.fetch(document.uri, :analysis),
-         {:ok, entity, _range} <- Entity.resolve(analysis, position) do
+      {:ok, entity, _range} <- Entity.resolve(analysis, position) do
       fetch_definition(entity, analysis, position)
     end
   end

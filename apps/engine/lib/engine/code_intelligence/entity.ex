@@ -33,9 +33,9 @@ defmodule Engine.CodeIntelligence.Entity do
     analysis = Ast.reanalyze_to(analysis, position)
 
     with :ok <- check_commented(analysis, position),
-         {:ok, surround_context} <- Ast.surround_context(analysis, position),
+      {:ok, surround_context} <- Ast.surround_context(analysis, position),
          {:ok, resolved, {begin_pos, end_pos}} <-
-           resolve(surround_context, analysis, position) do
+        resolve(surround_context, analysis, position)  do
       Logger.info("Resolved entity: #{inspect(resolved)}")
       {:ok, resolved, to_range(analysis.document, begin_pos, end_pos)}
     else
@@ -143,6 +143,21 @@ defmodule Engine.CodeIntelligence.Entity do
         _ ->
           {:ok, {:call, module, fun, 0}, node_range}
       end
+    end
+  end
+
+  defp resolve({:heex_local_call, fun_chars}, node_range, analysis, position) do
+    fun = List.to_atom(fun_chars)
+
+    with {:ok, path} <- Ast.path_at(analysis, position),
+         arity = arity_at_position(path, position),
+         {module, ^fun, ^arity} <-
+           Engine.Analyzer.resolve_local_call(analysis, position, fun, arity) do
+      {:ok, {:call, module, fun, arity}, node_range}
+    else
+      _ ->
+        module = current_module(analysis, position)
+        {:ok, {:call, module, fun, 0}, node_range}
     end
   end
 

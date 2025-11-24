@@ -108,6 +108,30 @@ defmodule Expert.Engine.CodeIntelligence.DefinitionTest do
     end
   end
 
+  describe "definition/2 when making remote heex calls by import" do
+    setup [:with_heex_component]
+
+    test "find the definition of a remote component", %{project: project, uri: referenced_uri} do
+      subject_module = ~q[
+        defmodule MyComponent do
+          import MyButton
+
+          def fancy_button() do
+            ~H"""
+            <.but|ton>Fancy Button</.button>
+
+            """
+
+          end
+        end
+      ]
+      assert {:ok, ^referenced_uri, definition_line} =
+               definition(project, subject_module, referenced_uri)
+
+      assert definition_line == ~S[  def «button(assigns)» do]
+    end
+  end
+
   describe "definition/2 when making remote call by alias" do
     setup [:with_referenced_file]
 
