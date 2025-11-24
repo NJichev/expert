@@ -149,7 +149,7 @@ for Eglot:
                      '("expert_linux_amd64" "start_lexical.sh"))))))
 ```
 
-### Visual Studio Code
+### Visual Studio Code or Cursor
 
 Click on the extensions button on the sidebar, then search for
 `lexical`, then click `install`.
